@@ -90,5 +90,5 @@ void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* c
 	}
 
 	// Now sort them.
-	ssort(restaurants);
+	qsort(restaurants);
 }
