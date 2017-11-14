@@ -35,6 +35,38 @@ void ssort(RestDist restaurants[]) {
 		swap(restaurants[i], restaurants[maxId]);
 	}
 }
+int pivot(RestDist restaurants[], int n, int pi) {
+  swap(restaurants[pi], restaurants[n-1]);
+  int lo = 0;
+  int hi = n-2;
+
+  // iterate until lo>high
+  while (lo <= hi){
+    if (restaurants[hi] > restaurants[n-1]) {
+      hi--;
+    }
+    else if (restaurants[lo] <= restaurants[n-1]) {
+      lo++;
+    }
+    else{
+      swap(restaurants[lo], restaurants[hi]);
+    }
+  }
+  swap(restaurants[lo], restaurants[n-1]);
+  return lo;
+}
+
+//Sort an array with n elements using Quick Sort
+void qsort(RestDist restaurants[], int n) {
+  if (n < 1){return;}
+  int pi = n/2;
+
+  int newPi = pivot(restaurants, n, pi);
+
+  qsort(restaurants, newPi);
+  qsort(restaurants + (newPi + 1), n - (newPi + 1));
+
+}
 
 // Computes the manhattan distance between two points (x1, y1) and (x2, y2).
 int16_t manhattan(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
