@@ -5,6 +5,7 @@
 #include "lcd_image.h"
 #include "yegmap.h"
 #include "restaurant.h"
+#include <TouchScreen.h>
 
 // TFT display and SD card will share the hardware SPI interface.
 // For the Adafruit shield, these are the default.
@@ -28,10 +29,30 @@
 #define DISP_WIDTH (TFT_WIDTH - RATING_SIZE)
 #define DISP_HEIGHT TFT_HEIGHT
 
+// right hand side button radius
+#define buttonRadius 20
+
 // constants for the joystick
 #define JOY_DEADZONE 64
 #define JOY_CENTRE 512
 #define JOY_STEPS_PER_PIXEL 64
+
+// calibration data for the touch screen, obtained from documentation
+// the minimum/maximum possible readings from the touch point
+#define TS_MINX 150
+#define TS_MINY 120
+#define TS_MAXX 920
+#define TS_MAXY 940
+
+// touch screen pins, obtained from the documentaion
+#define YP A2  // must be an analog pin, use "An" notation!
+#define XM A3  // must be an analog pin, use "An" notation!
+#define YM  5  // can be a digital pin
+#define XP  4  // can be a digital pin
+
+// thresholds to determine if there was a touch
+#define MINPRESSURE   10
+#define MAXPRESSURE 1000
 
 // Cursor size. For best results, use an odd number.
 #define CURSOR_SIZE 9
@@ -42,11 +63,21 @@
 // Use hardware SPI (on Mega2560, #52, #51, and #50) and the above for CS/DC
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
+// a multimeter reading says there are 300 ohms of resistance across the plate,
+// so initialize with this to get more accurate readings
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
 // the currently selected restaurant, if we are in mode 1
 int selectedRest;
 
 // which mode are we in?
 int mode;
+
+// keep track of previous rating selection
+int previousRatingSelection = 8;
+
+// rating selection button coordinate array
+int buttonCoords[5][2];
 
 // the current map view and the previous one from last cursor movement
 MapView curView, preView;
@@ -123,11 +154,66 @@ void moveCursor() {
 							 CURSOR_SIZE, CURSOR_SIZE, ILI9341_RED);
 }
 
+void drawCircleButton(int buttonY, int buttonNum, int backColor){
+	tft.fillCircle(TFT_WIDTH-(RATING_SIZE/2), buttonY, buttonRadius, backColor);
+	tft.setCursor(TFT_WIDTH-(RATING_SIZE/2)-5,buttonY-(buttonRadius/2)+3);
+	tft.setTextColor(ILI9341_RED);
+	tft.setTextSize(2);
+	tft.println(5-buttonNum);
+}
+
+// check if rating selector button is selected
+void checkTouch() {
+	TSPoint touch = ts.getPoint();
+
+	if (touch.z < MINPRESSURE || touch.z > MAXPRESSURE) {
+		// no touch, just quit
+		return;
+	}
+
+	// get the y coordinate of where the display was touched
+	// remember the x-coordinate of touch is really our y-coordinate
+	// on the display
+	int touchY = map(touch.x, TS_MINX, TS_MAXX, 0, TFT_HEIGHT - 1);
+
+	// need to invert the x-axis, so reverse the
+	// range of the display coordinates
+	int touchX = map(touch.y, TS_MINY, TS_MAXY, TFT_WIDTH - 1, 0);
+
+	for (int i=0; i<5; i++){
+		int xCoord = buttonCoords[i][0]-touchX;
+		int yCoord = buttonCoords[i][1]-touchY;
+		if ((i==0 && touchY < TFT_HEIGHT/2) || (i==4 && touchY > TFT_HEIGHT/2) || (i > 0 && i < 4)){
+			if ((xCoord*xCoord + yCoord*yCoord <= (buttonRadius)*buttonRadius) && i!=previousRatingSelection && touchX>= DISP_WIDTH){
+				Serial.println(i);
+				previousRatingSelection = i;
+				for (int j=i+1; j<5; j++){
+					int buttonY = buttonCoords[j][1];
+					drawCircleButton(buttonY, j, ILI9341_BLACK);
+				}
+				for (int j=0; j<i+1; j++){
+					int buttonY = buttonCoords[j][1];
+					drawCircleButton(buttonY, j, ILI9341_WHITE);
+				}
+			}
+		}
+	}
+}
+
+
 // Set the mode to 0 and draw the map and cursor according to curView
 void beginMode0() {
 	// Black out the rating selector part (less relevant in Assignment 1, but
 	// it is useful when you first start the program).
 	tft.fillRect(DISP_WIDTH, 0, RATING_SIZE, DISP_HEIGHT, ILI9341_BLACK);
+
+	// draw the rating buttons
+	for (int i=0; i<5; i++){
+		int buttonY = buttonRadius+ (8 + buttonRadius*2)*i;
+		buttonCoords[i][0] = TFT_WIDTH-(RATING_SIZE/2);
+		buttonCoords[i][1] = buttonY;
+		drawCircleButton(buttonY, i, ILI9341_WHITE);
+	}
 
 	// Draw the current part of Edmonton to the tft display.
   lcd_image_draw(&edmontonBig, &tft,
@@ -328,6 +414,7 @@ int main() {
 	while (true) {
 		if (mode == 0) {
 			scrollingMap();
+			checkTouch();
 		}
 		else {
 			scrollingMenu();
