@@ -80,17 +80,22 @@ int16_t manhattan(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
 	in restaurants[], and then sorts them based on their distance to the
 	point on the map represented by the MapView.
 */
-void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* card, RestCache* cache) {
+int getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* card, RestCache* cache, int rating) {
 	restaurant r;
-
+	int restCounter = 0;
 	// first get all the restaurants and store their corresponding RestDist information.
 	for (int i = 0; i < NUM_RESTAURANTS; ++i) {
 		getRestaurant(&r, i, card, cache);
-		restaurants[i].index = i;
-		restaurants[i].dist = manhattan(lat_to_y(r.lat), lon_to_x(r.lon),
-																		mv.mapY + mv.cursorY, mv.mapX + mv.cursorX);
+		int convertedRating = max(floor((r.rating+1)/2),1);
+		if (convertedRating >= rating){
+			restaurants[restCounter].index = i;
+			restaurants[restCounter].dist = manhattan(lat_to_y(r.lat), lon_to_x(r.lon),
+																			mv.mapY + mv.cursorY, mv.mapX + mv.cursorX);
+			//Serial.println(r.name);
+			restCounter++;
+		}
 	}
-
 	// Now sort them.
-	qsort(restaurants, NUM_RESTAURANTS);
+	qsort(restaurants, restCounter);
+	return restCounter;
 }

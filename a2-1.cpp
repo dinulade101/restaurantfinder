@@ -74,7 +74,13 @@ int selectedRest;
 int mode;
 
 // keep track of previous rating selection
-int previousRatingSelection = 8;
+int previousRatingSelection = 4;
+
+// keep track of page
+int pageNum = 0;
+
+// keep track of number of restaurants for a specified rating
+int numOfRestaurants;
 
 // rating selection button coordinate array
 int buttonCoords[5][2];
@@ -242,8 +248,9 @@ void printRestaurant(int i) {
 	else {
 		tft.setTextColor(ILI9341_BLACK, ILI9341_WHITE);
 	}
-	tft.setCursor(0, i*8);
+	tft.setCursor(0, (i-30*pageNum)*8);
 	tft.print(r.name);
+	Serial.println(i);
 }
 
 // Begin mode 1 by sorting the restaurants around the cursor
@@ -253,7 +260,7 @@ void beginMode1() {
 	tft.fillScreen(ILI9341_BLACK);
 
 	// Get the RestDist information for this cursor position and sort it.
-	getAndSortRestaurants(curView, restaurants, &card, &cache);
+	numOfRestaurants = getAndSortRestaurants(curView, restaurants, &card, &cache, 5-previousRatingSelection);
 
 	// Initially have the closest restaurant highlighted.
 	selectedRest = 0;
@@ -359,6 +366,31 @@ void scrollingMap() {
   }
 }
 
+void loadNextPage(){
+	pageNum++;
+
+	tft.setCursor(0, 0);
+	tft.fillScreen(ILI9341_BLACK);
+
+	for (int i=REST_DISP_NUM*pageNum; i < REST_DISP_NUM*(pageNum+1); ++i){
+		if (i < numOfRestaurants){
+			printRestaurant(i);
+		}
+	}
+}
+
+void loadPreviousPage(){
+	pageNum--;
+	tft.setCursor(0,0);
+	tft.fillScreen(ILI9341_BLACK);
+
+	for (int i=REST_DISP_NUM*(pageNum); i<REST_DISP_NUM*(pageNum+1); ++i){
+		if (i < numOfRestaurants){
+			printRestaurant(i);
+		}
+	}
+}
+
 // Process joystick movement when in mode 1.
 void scrollingMenu() {
 	int oldRest = selectedRest;
@@ -372,7 +404,14 @@ void scrollingMenu() {
 	else if (v < JOY_CENTRE - JOY_DEADZONE) {
 		--selectedRest;
 	}
-	selectedRest = constrain(selectedRest, 0, REST_DISP_NUM -1);
+	if((selectedRest == REST_DISP_NUM*(pageNum+1)) && selectedRest <= numOfRestaurants -1){
+		// load next screen
+		loadNextPage();
+	}
+	else if ((selectedRest == (REST_DISP_NUM*(pageNum))-1) && selectedRest >= 0 && pageNum>0){
+		loadPreviousPage();
+	}
+	selectedRest = constrain(selectedRest, 0, numOfRestaurants -1);
 
 	// If we picked a new restaurant, update the way it and the previously
 	// selected restaurant are displayed.
