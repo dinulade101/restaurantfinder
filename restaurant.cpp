@@ -25,16 +25,17 @@ void swap(RestDist& r1, RestDist& r2) {
 }
 
 // Selection sort to sort the restaurants.
-void ssort(RestDist restaurants[]) {
-	for (int i = NUM_RESTAURANTS-1; i >= 1; --i) {
-		int maxId = 0;
-		for (int j = 1; j <= i; ++j)
-			if (restaurants[j].dist > restaurants[maxId].dist) {
-				maxId = j;
-			}
-		swap(restaurants[i], restaurants[maxId]);
-	}
-}
+// void ssort(RestDist restaurants[]) {
+// 	for (int i = NUM_RESTAURANTS-1; i >= 1; --i) {
+// 		int maxId = 0;
+// 		for (int j = 1; j <= i; ++j)
+// 			if (restaurants[j].dist > restaurants[maxId].dist) {
+// 				maxId = j;
+// 			}
+// 		swap(restaurants[i], restaurants[maxId]);
+// 	}
+// }
+
 int pivot(RestDist restaurants[], int n, int pi) {
   swap(restaurants[pi], restaurants[n-1]);
   int lo = 0;
@@ -52,6 +53,7 @@ int pivot(RestDist restaurants[], int n, int pi) {
       swap(restaurants[lo], restaurants[hi]);
     }
   }
+  
   swap(restaurants[lo], restaurants[n-1]);
   return lo;
 }

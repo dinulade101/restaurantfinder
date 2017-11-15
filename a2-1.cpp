@@ -145,7 +145,7 @@ void beginMode0() {
 // Assumes 0 <= i < 30 for part 1.
 void printRestaurant(int i) {
 	restaurant r;
-
+  
 	// get the i'th restaurant
 	getRestaurant(&r, restaurants[i].index, &card, &cache);
 
