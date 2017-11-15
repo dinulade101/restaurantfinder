@@ -42,10 +42,10 @@ int pivot(RestDist restaurants[], int n, int pi) {
 
   // iterate until lo>high
   while (lo <= hi){
-    if (restaurants[hi] > restaurants[n-1]) {
+    if (restaurants[hi].dist > restaurants[n-1].dist) {
       hi--;
     }
-    else if (restaurants[lo] <= restaurants[n-1]) {
+    else if (restaurants[lo].dist <= restaurants[n-1].dist) {
       lo++;
     }
     else{
@@ -90,5 +90,5 @@ void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* c
 	}
 
 	// Now sort them.
-	qsort(restaurants);
+	qsort(restaurants, NUM_RESTAURANTS);
 }
