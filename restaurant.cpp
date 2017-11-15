@@ -25,16 +25,17 @@ void swap(RestDist& r1, RestDist& r2) {
 }
 
 // Selection sort to sort the restaurants.
-void ssort(RestDist restaurants[]) {
-	for (int i = NUM_RESTAURANTS-1; i >= 1; --i) {
-		int maxId = 0;
-		for (int j = 1; j <= i; ++j)
-			if (restaurants[j].dist > restaurants[maxId].dist) {
-				maxId = j;
-			}
-		swap(restaurants[i], restaurants[maxId]);
-	}
-}
+// void ssort(RestDist restaurants[]) {
+// 	for (int i = NUM_RESTAURANTS-1; i >= 1; --i) {
+// 		int maxId = 0;
+// 		for (int j = 1; j <= i; ++j)
+// 			if (restaurants[j].dist > restaurants[maxId].dist) {
+// 				maxId = j;
+// 			}
+// 		swap(restaurants[i], restaurants[maxId]);
+// 	}
+// }
+
 int pivot(RestDist restaurants[], int n, int pi) {
   swap(restaurants[pi], restaurants[n-1]);
   int lo = 0;
@@ -42,16 +43,17 @@ int pivot(RestDist restaurants[], int n, int pi) {
 
   // iterate until lo>high
   while (lo <= hi){
-    if (restaurants[hi] > restaurants[n-1]) {
+    if (restaurants[hi].dist > restaurants[n-1].dist) {
       hi--;
     }
-    else if (restaurants[lo] <= restaurants[n-1]) {
+    else if (restaurants[lo].dist <= restaurants[n-1].dist) {
       lo++;
     }
     else{
       swap(restaurants[lo], restaurants[hi]);
     }
   }
+
   swap(restaurants[lo], restaurants[n-1]);
   return lo;
 }
@@ -90,5 +92,5 @@ void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* c
 	}
 
 	// Now sort them.
-	qsort(restaurants);
+	qsort(restaurants, NUM_RESTAURANTS);
 }
